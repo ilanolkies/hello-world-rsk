@@ -2,6 +2,10 @@
 
 Hello World decentralized application in RSK network.
 
+Try it: https://ilanolkies/hello-world-rsk/
+
+Read the blog post: https://ilanolkies.com/post/Hello-world-to-descentralized-applications
+
 ## Run locally
 
 In one terminal:
