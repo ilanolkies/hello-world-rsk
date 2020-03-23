@@ -26,7 +26,7 @@ class App extends Component {
   getMessage() {
     this.setState({ message: null });
 
-    const web3 = new Web3('http://localhost:9545');
+    const web3 = new Web3(process.env.REACT_APP_NODE_ENDPOINT);
 
     const helloWorld = new web3.eth.Contract([
       {
@@ -40,7 +40,7 @@ class App extends Component {
         stateMutability: "view",
         type: "function",
       },
-    ], '0x138a4c489A657BA9419f21C2E0c4d9B265a67341');
+    ], process.env.REACT_APP_HELLO_WORLD_ADDRESS);
 
     helloWorld.methods.getMessage().call().then(message => this.setState({ message }));
   }
@@ -63,7 +63,7 @@ class App extends Component {
 
       web3.eth.net.getId()
       .then(networkId => {
-        if (networkId !== 5777) this.setState({ error: 'Wrong network. Please connect to your local network.' });
+        if (networkId.toString() !== process.env.REACT_APP_NET_ID) this.setState({ error: 'Wrong network. Please connect to your local network.' });
         else {
           const helloWorld = new web3.eth.Contract([
             {
@@ -77,14 +77,17 @@ class App extends Component {
               stateMutability: "nonpayable",
               type: "function",
             },
-          ], '0x138a4c489A657BA9419f21C2E0c4d9B265a67341');
+          ], process.env.REACT_APP_HELLO_WORLD_ADDRESS);
 
           return helloWorld.methods.setMessage(newMessage).send({ from: accounts[0] })
-          .on('receipt', ({ transactionHash }) => this.setState({ transactionHash }))
+          .on('receipt', ({ transactionHash }) => {
+            this.setState({ transactionHash, setting: false });
+            return this.getMessage();
+          })
+          .catch(error => this.setState({ error: error.message, setting: false }))
         }
       });
     }).catch(error => this.setState({ error: error.message, setting: false }))
-    .finally(() => this.getMessage());
   }
 
   render() {
@@ -112,6 +115,7 @@ class App extends Component {
                 <Button onClick={this.setMessage} disabled={setting}>Set Message</Button>
               </InputGroup>
             </Row>
+            {setting && <Row><Col><Spinner animation="border" /></Col></Row>}
             {error && <Row><Col><Alert variant="danger">{error}</Alert></Col></Row>}
             {transactionHash && <Row><Col><Alert variant="success">Success! Transaction id: {transactionHash}</Alert></Col></Row>}
           </>
